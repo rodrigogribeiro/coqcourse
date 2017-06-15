@@ -1,0 +1,17 @@
+title: Uma introdução ao assistente de provas Coq.
+email: rodrigogribeiro@gmail.com
+description: Notas de aula de um curso introdutório de verificação formal utilizando Coq.
+baseurl: "" 
+url: "" 
+github_username:  rodrigogribeiro
+
+# Build settings
+include: ['_pages']
+markdown: kramdown
+input: GFM
+theme: minima
+gems:
+  - jekyll-feed
+exclude:
+  - Gemfile
+  - Gemfile.lock
