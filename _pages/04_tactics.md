@@ -176,7 +176,7 @@ Qed.
 ### Tática `auto`
 
 De maneira simples, a tática `auto` resolve conclusões que podem ser provadas por
-uma combinação de `assumption`, `intros` e [apply] até uma profundidade máxima 
+uma combinação de `assumption`, `intros` e `apply` até uma profundidade máxima 
 para busca por uma solução. O valor padrão de profundidade de busca é 5. A 
 seguir usamos a tática `auto` para provar um resultado provado anteriormente.
 

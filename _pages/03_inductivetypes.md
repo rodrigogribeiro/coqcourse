@@ -178,7 +178,7 @@ Abaixo apresentamos a prova de que a negação é involutiva.
       simpl.
       reflexivity.
   Qed.
-```	  
+```	 
 
 Antes de executarmos a tática `destruct b` o estado da prova é:
 
@@ -203,7 +203,7 @@ not_bool (not_bool false) = false
   Lemma and_true_left : forall b, and_bool true b = b.
   Proof.
   Admitted.
-```  
+```
 
 ### Exercício 16
 
@@ -345,7 +345,7 @@ O que aconteceu de errado? A definição da função de adição está incorreta
 entendermos este problema devemos entender melhor como funciona a igualdade em 
 assistentes de prova baseados em teoria de tipos intuicionista.
 
-# Igualdade em Coq #
+## Igualdade em Coq 
 
 A igualdade em teoria de tipos intuicionista é um tópico de pesquisa muito ativo.
 A definição usual é a conhecida como _igualdade proposicional_ que, intuitivamente,
@@ -608,17 +608,8 @@ A partir desta definição, enuncie e prove os seguintes fatos sobre a multiplic
 
 ### Exercício 21
 
-Defina a função [even_bool : nat -> bool] que, a partir de um número natural, retorne
+Defina a função `even_bool : nat -> bool` que, a partir de um número natural, retorne
 verdadeiro se este é par.
-
-```coq
-    Fixpoint even_bool (n : nat) : bool :=
-      match n with
-      | 0 => true
-      | S 0 => false
-      | S (S n') => even_bool n'
-      end.
-```
 	  
 ### Exercício 22
 
@@ -634,15 +625,6 @@ Prove a seguinte propriedade sobre a função `even_bool`:
 
 Defina a função `odd_bool : nat -> bool` que, a partir de um número natural, 
 retorne verdadeirso se este é ímpar
-
-```coq
-    Fixpoint odd_bool (n : nat) : bool :=
-      match n with
-      | 0 => false
-      | S 0 => true
-      | S (S n') => odd_bool n'
-      end.
-```
 	  
 ### Exercício 24
 
@@ -1181,7 +1163,7 @@ entre números naturais
     Inductive le_alt : nat -> nat -> Prop :=
     | le_alt_zero : forall n, 0 <<= n
     | le_alt_succ : forall n m, n <<= m -> S n <<= S m
-    where "x '<<=' y" := (le_alt x y).                            
+    where "x '<<=' y" := (le_alt x y).
 
 ### Exercício 39
 

@@ -223,7 +223,7 @@ como usar essas táticas para provar que o conectivo de conjunção é comutativ
     +
       assumption.
   Qed.
-  ```
+```
 O teorema `and_assoc` mostra que a conjunção é uma operação associativa. 
 Ele é provado utilizando táticas já apresentadas anteriormente. A peculiaridade
 deste exemplo é o uso de _padrões aninhados_ para decompor a hipótese `Habc: A /\ B /\ C`
@@ -444,7 +444,7 @@ de tipos classifica tipos em termos de universos. Coq possui dois universos bás
 de universos de tipos que evitam inconsistências lógicas.
 
 O quantificador universal é representado em Coq pela palavra reservada
-`forall` e o quantificador existencial por `exists`. Para o quantificador `foral`l utilizaremos
+`forall` e o quantificador existencial por `exists`. Para o quantificador `forall` utilizaremos
 as táticas `intro` para introdução deste quantificador e `apply` ou `destruct`
 para eliminá-lo. O seguinte exemplo ilustra o uso destas táticas.
 

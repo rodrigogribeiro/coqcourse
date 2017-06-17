@@ -256,3 +256,9 @@ pesquisa!
 - Verificar uma prova nada mais é que o processo de verificação de
 tipos realizado por um compilador.
 - Em essência, lógica e computação são visões diferentes de um mesmo fenômeno.
+
+# Slides e materiais para o curso
+
+Todo o material deste curso está disponível no site
+
+http://rodrigogribeiro.github.io/coqcourse

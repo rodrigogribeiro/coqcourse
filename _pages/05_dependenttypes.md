@@ -420,4 +420,61 @@ concatenação.
 Enuncie e prove um teorema que mostra que concatenação de valores de
 tipo `vector` é uma operação associativa.
 
+Outra vantagem do tipo `vector` é por permitir especificar que a
+função `head`, que obtem o primeiro elemento de uma lista, só pode ser
+aplicada sobre listas não vazias.
 
+```coq
+  Definition vhead {A : Set}{n}(v : vector A (S n)) : A :=
+    match v with
+    | vcons _ _ x _ => x
+    end.
+````
+
+Outra operação que pode ser representada de maneira segura usando
+o tipo`vector` é a operação de indexação sobre listas. Para isso,
+vamos utilizar o tipo `fin n`, que representa um conjunto contendo
+`n` elementos.
+
+```coq
+  Inductive fin : nat -> Set :=
+  | fzero : forall {n}, fin (S n)
+  | fsucc : forall {n}, fin n -> fin (S n).
+```
+
+De acordo com a definição do tipo `fin`, podemos observar que não é
+possível construir um valor de tipo `fin 0`, logo denota o conjunto
+vazio e o tipo `fin 1`, possui exatamente um valor `fzero : fin 1`,
+por sua vez, `fin 2` possui dois a valores, a saber: `fzero : fin 2` e
+`fsucc fzero : fin 2`, e assim por diante.
+
+A função `get`, usada para indexar valores de tipo `vector` é
+apresentada abaixo.
+
+```coq
+Fixpoint get {A}{n}(ls : vector A n) : fin n -> A :=
+    match ls with
+      | vnil _ => fun idx =>
+        match idx in fin n' return (match n' with
+                                        | O => A
+                                        | S _ => unit
+                                      end) with
+          | fzero => tt
+          | fsucc _ => tt
+        end
+      | vcons _ _ x ls' => fun idx =>
+        match idx in fin n' return (fin (pred n') -> A) -> A with
+          | fzero => fun _ => x
+          | fsucc idx' => fun get_ls' => get_ls' idx'
+        end (get ls')
+	end.
+```
+O tipo da função `get` garante:
+
+- Esta não pode ser chamada sobre listas vazias. Isso se deve ao fato
+  de que o tipo `fin 0` ser equivalente ao tipo `False`, por ser não habitado.
+
+- Esta não pode ser chamada sobre índices maiores que o tamanho da
+lista. Esta restrição está diretamente codificada pelo tipo: Note que
+tanto a lista `vector A n` e o índice `fin n` possuem o mesmo tamanho,
+"n", evitando acessos a posições inválidas.
