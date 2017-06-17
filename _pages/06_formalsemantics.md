@@ -386,16 +386,33 @@ A seguir, demonstramos que a semântica de passo-grande é
 determinística.
 
 ```coq
+Ltac bs :=
+	match goal with
+	| [H : T ==>> _ |- _] => inverts H
+    | [H : F ==>> _ |- _] => inverts H 
+	| [H : Zero ==>> _ |- _] => inverts H
+	| [H : (Succ _) ==>> _ |- _] => inverts H
+	| [H : value _ |- _] => inverts H
+	| [H : bvalue (Succ _) |- _] => inverts H
+	| [H : nvalue (Succ _) |- _] => inverts H
+	| [H : (Pred _) ==>> _ |- _] => inverts H
+	| [H : bvalue (Pred _) |- _] => inverts H
+	| [H : nvalue (Pred _) |- _] => inverts H
+	| [H : (If _ _ _) ==>> _ |- _] => inverts H
+	| [H : bvalue (If _ _ _) |- _] => inverts H
+	| [H : nvalue (If _ _ _) |- _] => inverts H
+	| [H : (IsZero _) ==>> _ |- _] => inverts H
+	| [H : bvalue (IsZero _) |- _] => inverts H
+	| [H : nvalue (IsZero _) |- _] => inverts H
+	| [ IH : forall v, ?e ==>> v -> forall v', ?e ==>> v' ->
+		, H : ?e ==>> _, H1 : ?e ==>> _ |- _] =>
+		apply (IH _ H) in H1
+	end ; subst ; try f_equal ; auto.
+
+
 Lemma big_step_deterministic : forall e v, e ==>> v -> forall v', e ==>> v' -> v = v'.
 Proof.
-  induction e ; intros ; repeat bs ; try solve [apply IHe ; try constructor ; auto].
-  apply (IHe _ H2) in H3 ; congruence.
-  apply (IHe _ H1) in H3 ; congruence.
-  apply (IHe _ H3) in H4 ; inverts H4 ; auto.
-  apply (IHe1 _ H5) in H4 ; congruence.
-  apply (IHe1 _ H5) in H4 ; congruence.
-  apply (IHe _ H2) in H3 ; congruence.
-  apply (IHe _ H1) in H3 ; congruence.
+  induction e ; intros ; repeat bs.
 Qed.
 ```
 
@@ -438,4 +455,196 @@ Admitted.
 # Sistema de tipos
 
 Nosso próximo objetivo é a formalização de um sistema de tipos para
-nossa linguagem de expressões aritméticas.
+nossa linguagem de expressões aritméticas. A principal função de um
+sistema de tipos em uma linguagem de programação é evitar a execução
+de programas cujo comportamento seja indefinido. Primeiramente,
+definimos os tipos da linguagem de expressões.
+
+```coq
+Inductive type : Set :=
+| TBool : type
+| TNat  : type.
+```
+
+O sistema de tipos para a linguagem de expressões é definido como
+uma relação entre expressões e tipos conforme especificado pelo
+seguinte predicado indutivo.
+
+```
+Reserved Notation "e '<<-' t" (at level 40).
+
+Inductive has_type : exp -> type -> Prop :=
+| T_True
+  : T <<- TBool
+| T_False
+  : F <<- TBool
+| T_Zero
+  : Zero <<- TNat
+| T_Succ
+  : forall e,
+    e <<- TNat ->
+    (Succ e) <<- TNat
+| T_Pred
+  : forall e,
+    e <<- TNat  ->
+    (Pred e) <<- TNat
+| T_If
+  : forall e e' e'' t,
+    e <<- TBool ->
+    e' <<- t    ->
+    e'' <<- t   ->
+    (If e e' e'') <<- t
+| T_IsZero
+  : forall e,
+    e <<- TNat ->
+    (IsZero e) <<- TBool
+where "e '<<-' t" := (has_type e t).
+```
+
+### Exercício 55
+
+```coq
+Lemma bool_canonical : forall e, e <<- TBool -> value e -> bvalue e.
+Proof.
+Admitted.
+```
+
+### Exercício 56
+
+```coq
+Lemma nat_canonical : forall e, e <<- TNat -> value e -> nvalue e. 
+Proof.
+Admitted.
+```
+
+A seguir apresentamos a demonstração da propriedade de progresso, que
+especifica que toda expressão bem tipada é um valor ou ainda pode
+executar mais um passo.
+
+
+```coq
+Theorem progress : forall e t, e <<- t -> value e \/ exists e', e ==> e'.
+Proof.
+  induction 1 ; try solve [left ; auto] ;
+    try repeat (match goal with
+                | [H : _ \/ _ |- _] => destruct H
+                | [H : ex _ |- _] => destruct H
+                | [H : value _ |- _] => inverts H
+                | [H : bvalue _ |- _] => inverts H
+                | [H : T <<- _ |- _] => inverts H
+                | [H : F <<- _ |- _] => inverts H
+                | [H : nvalue _ |- context[(Pred _)]] => inverts H
+                | [H : nvalue _ |- context[(IsZero _)]] => inverts H
+                | [H : ?e <<- TBool , H1 : nvalue ?e |- _] =>
+                  inverts H1 ; inverts H
+                end ; try solve [ right ; eexists ; eauto ] ; auto).
+Qed.
+```
+A prova da propriedade de progesso é realizada por indução sobre a
+derivação de tipo da expressão, conforme apresentado no script
+anterior.
+
+A propriedade de preservação garante que uma expressão bem tipada ao
+executar um passo produz outra expressão bem tipada. A demontração de
+preservação é realizada por indução sobre a derivação de tipos,
+conforme abaixo.
+
+```coq
+Theorem preservation : forall e t, e <<- t -> forall e', e ==> e' -> e' <<- t.
+Proof.
+  induction 1 ; intros ; repeat (s ; eauto) ;
+    try repeat (match goal with
+                | [H : _ ==> _ |- _] => inverts H ; eauto
+                | [H : (Succ _) <<- _ |- _] => inverts H ; eauto
+                end).
+Qed.
+```
+
+Outra propriedade importante deste sistema de tipos é a unicidade de
+tipos (ou determinismo), isto é, uma expressão bem tipada possui
+somente um tipo válido.
+
+```coq
+Theorem has_type_det : forall e t, e <<- t -> forall t', e <<- t' -> t = t'.
+Proof.
+  induction 1 ; intros t' Hc ; inverts Hc ; eauto.
+Qed.
+```
+
+## Definindo um typechecker
+
+Nosso último exemplo consiste em implementar um typechecker para a
+linguagem de expressões usando um tipo que garanta sua correção com
+respeito ao sistema de tipos da linguagem.
+
+Para definição do typechecker vamos precisar de uma função para testar
+a igualdade de tipos, definida abaixo usando a tática `decide
+equality` e algumas notações.
+
+```
+Definition eq_ty_dec : forall (t t' : type), {t = t'} + {t <> t'}.
+  decide equality.
+Defined.
+
+Notation "!!" := (inright _ _).
+Notation "[|| x ||]" := (inleft _ [x]).
+
+Notation "x <-- e1 ; e2" := (match e1 with
+                               | inright _ => !!
+                               | inleft (exist _ x _) => e2
+                             end)
+                             (right associativity, at level 60).
+
+Notation "e1 ;;; e2" := (if e1 then e2 else !!)
+                          (right associativity, at level 60).
+```
+
+O type checker é apresentado abaixo e utiliza automação de prova para
+descartar obrigações produzidas pelo uso da tática `refine` em sua
+definição. 
+
+```coq
+Definition typecheck : forall e, {t | e <<- t} + {forall t, ~ (e <<- t)}.
+  refine (fix tc (e : exp) : {t | e <<- t} + {forall t, ~ (e <<- t)} :=
+            match e as e' return e = e' -> {t | e' <<- t} + {forall t, ~ (e' <<- t)} with
+            | T  => fun _ => [|| TBool ||]
+            | F  => fun _ => [|| TBool ||]
+            | Zero  => fun _ => [|| TNat ||]
+            | Succ e => fun _ =>
+                          ty <-- tc e ;
+                          eq_ty_dec ty TNat ;;;
+                          [|| TNat ||]          
+            | Pred e => fun _ => 
+                          ty <-- tc e ;
+                          eq_ty_dec ty TNat ;;;
+                          [|| TNat ||]          
+            | IsZero e => fun _ => 
+                          ty <-- tc e ;
+                          eq_ty_dec ty TNat ;;;
+                          [|| TBool ||]          
+            | If e e1 e2 => fun _ =>
+                          ty <-- tc e ;
+                          ty1 <-- tc e1 ;
+                          ty2 <-- tc e2 ;
+                          eq_ty_dec ty TBool ;;;
+                          eq_ty_dec ty1 ty2  ;;;
+                          [|| ty1 ||]
+            end eq_refl) ; clear tc ;
+           simpl in * ; subst ;
+             try (intro ; intro) ;
+             try (match goal with
+                  | [ H : _ <<- _ |- _] => inverts H
+                  end) ;
+                 try (match goal with
+                      | [ H : forall x, ~ (_ <<- _) |- False ] => eapply H ; eauto
+                    | [H : ?e <<- ?t , H1 : ?e <<- ?t' |- _] =>
+                      eapply (has_type_det H) in H1 ; subst
+                      end) ; eauto.
+Defined.
+```
+Note que o tipo do type checker é
+`forall e, {t | e <<- t} + {forall t, ~ (e <<- t)}`,  que a partir de
+                          uma expressão `e`, retorna como resultado um
+                          tipo `t` e uma prova de que este é o tipo da
+                          expressão `e` ou returna a prova de que
+                          nenhum tipo pode ser atribuído a expressão `e`.

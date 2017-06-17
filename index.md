@@ -32,5 +32,5 @@ Materiais para o curso
 ==============
 
 O código fonte a ser utilizado para durante todo o curso está
-disponível neste link.
+disponível neste [link]({{ site.baseurl }}/code.zip).
 
