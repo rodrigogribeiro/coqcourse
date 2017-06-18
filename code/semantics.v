@@ -258,6 +258,10 @@ Proof.
   induction e ; intros ; repeat bs.
 Qed.
 
+Lemma big_step_mult_step  : forall e v, value v -> e ==>> v -> e ==>* v.
+Proof.
+  induction e ; intros v Hv ; try solve [inverts Hv].
+Qed.
 
 (* typing *)
 

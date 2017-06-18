@@ -22,8 +22,7 @@ para o editor emacs.
 Pré-requisitos
 ==========
 
-O material foi elaborado de forma a supor o mínimo de
-pré-requisitos. De maneira geral espera-se que os alunos tenham noções
+De maneira geral espera-se que os alunos tenham noções
 de lógica formal (dedução natural para lógica clássica) e programação
 funcional. Conhecimento básico de semântica operacional é útil, porém
 não obrigatório.
@@ -31,6 +30,6 @@ não obrigatório.
 Materiais para o curso
 ==============
 
-O código fonte a ser utilizado para durante todo o curso está
+O código fonte a ser utilizado durante todo o curso está
 disponível neste [link]({{ site.baseurl }}/code.zip).
 
