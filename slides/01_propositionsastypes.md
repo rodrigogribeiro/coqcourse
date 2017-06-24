@@ -6,6 +6,13 @@ header-includes:
     - \usepackage{proof}
 ---
 
+# Slides e materiais para o curso
+
+Todo o material deste curso está disponível no site
+
+http://rodrigogribeiro.github.io/coqcourse
+
+
 # Logic side: Dedução natural
 
 $$

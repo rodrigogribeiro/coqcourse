@@ -2,7 +2,7 @@ Section PropositionalLogic.
   Variables A B C : Prop.
 
   (** implicação *)
-  
+
   Theorem first_theorem : (A -> B) -> A -> B.
   Proof.
     intro Hab.
@@ -15,14 +15,23 @@ Section PropositionalLogic.
 
   Lemma ex1 : A -> B -> A.
   Proof.
-  Admitted.
+    intro HA.
+    intro HB.
+    assumption.
+  Qed.
 
 
   (** exercício 2 *)
 
   Lemma ex2 : (A -> B) -> (B -> C) -> A -> C.
   Proof.
-  Admitted.
+    intro HAB.
+    intro HBC.
+    intro HA.
+    apply HBC.
+    apply HAB.
+    assumption.
+  Qed.
 
   (** conjunção *)  
 
@@ -193,7 +202,8 @@ Section PredicateLogic.
     assumption.
   Qed.
 
-  Lemma ex_or : (exists x : U, P x \/ Q x) -> (exists x : U, P x) \/ (exists y : U, Q y).
+  Lemma ex_or : (exists x : U, P x \/ Q x) ->
+                (exists x : U, P x) \/ (exists y : U, Q y).
   Proof.
     intro Hpq.
     destruct Hpq as [x [Hpx | Hqx]].

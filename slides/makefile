@@ -7,3 +7,4 @@ pdf:
 	pandoc -t beamer  04_tactics.md -o 04_tactics.pdf
 	pandoc -t beamer  05_dependenttypes.md -o 05_dependenttypes.pdf
 	pandoc -t beamer  06_semantics.md -o 06_semantics.pdf
+

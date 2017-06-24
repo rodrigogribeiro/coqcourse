@@ -346,7 +346,11 @@ Proof.
   apply ev_zero.
 Qed.
 
-
+Example teste : even 1 -> 1 = 2.
+Proof.
+  intro H.
+  inversion H.
+Qed.
 Definition double (n : nat) := 2 * n.
 
 (** exercício 34 *)
@@ -451,10 +455,26 @@ Admitted.
 
 (** exercício 37 *)
 
+Ltac inverts H := inversion H ; subst ; clear H.
+
 Lemma le_antisym : forall n m, n <= m -> m <= n -> n = m.
 Proof.
-Admitted.
-
+  induction n.
+  intros.
+  -
+    inverts H0.
+    reflexivity.
+  -
+    intros.
+    destruct m.
+    inverts H.
+    f_equal.
+    apply IHn.
+    apply le_S_cong.
+    assumption.
+    apply le_S_cong.
+    assumption.
+Qed.
 (** exercício 38 
 
 Considere a tarefa de projetar um predicado indutivo
