@@ -15,14 +15,23 @@ Section PropositionalLogic.
 
   Lemma ex1 : A -> B -> A.
   Proof.
-  Admitted.
+    intro HA.
+    intro HB.
+    assumption.
+  Qed.
 
 
   (** exercício 2 *)
 
   Lemma ex2 : (A -> B) -> (B -> C) -> A -> C.
   Proof.
-  Admitted.
+    intro HAB.
+    intro HBC.
+    intro HA.
+    apply HBC.
+    apply HAB.
+    assumption.
+  Qed.
 
   (** conjunção *)  
 
@@ -56,25 +65,57 @@ Section PropositionalLogic.
 
   Lemma ex3 : (A /\ B) /\ C -> A /\ (B /\ C).
   Proof.
-  Admitted.
+    intro H.
+    destruct H as [[HA HB] HC].
+    split.
+    +
+      assumption.
+    +
+      split.
+      - assumption.
+      - assumption.
+  Qed.
 
   (** exercício 4 *)
 
   Lemma ex4 : ((A /\ B) -> C) -> (A -> B -> C).
   Proof.
-  Admitted.
+    intro H.
+    intro HA.
+    intro HB.
+    apply H.
+    split.
+    + assumption.
+    + assumption.  
+  Qed.
 
   (** exercício 5 *)
 
   Lemma ex5 : (A -> B -> C) -> ((A /\ B) -> C).
   Proof.
-  Admitted.
+    intro H.
+    intro HAB.
+    destruct HAB as [HA HB].
+    apply H.
+    + assumption.
+    + assumption.  
+  Qed.
 
   (** exercício 6 *)
 
   Lemma ex6 : ((A -> B) /\ (A -> C)) -> A -> (B /\ C).
   Proof.
-  Admitted.
+    intro H.
+    destruct H as [HAB HAC].
+    intro HA.
+    split.
+    +
+      apply HAB.
+      assumption.
+    +
+      apply HAC.
+      assumption.
+  Qed.
 
   (** bicondicional *)
   
@@ -150,13 +191,35 @@ Section PropositionalLogic.
 
   Lemma ex7 : ((A \/ B) /\ ~ A) -> B.
   Proof.
-  Admitted.
+    intro H.
+    destruct H as [[HA | HB] Hna].
+    + contradiction.
+    + assumption.  
+  Qed.
 
   (** exercício 8 *)
 
   Lemma ex8 : (A \/ (B /\ C)) -> (A \/ B) /\ (A \/ C).
   Proof.
-  Admitted.
+    intro H.
+    destruct H as [HA | [HB HC]].
+    +
+      split.
+      -
+        left.
+        assumption.
+      -
+        left.
+        assumption.
+    +    
+      split.
+      -
+        right.
+        assumption.
+      -
+        right.
+        assumption.
+  Qed.  
 End PropositionalLogic.
 
 Section PredicateLogic.
@@ -196,25 +259,51 @@ Section PredicateLogic.
   Lemma ex_or : (exists x : U, P x \/ Q x) ->
                 (exists x : U, P x) \/ (exists y : U, Q y).
   Proof.
-  Admitted.
+    intro Hpq.
+    destruct Hpq as [x [Hpx | Hqx]].
+    +
+      left.
+      exists x.
+      assumption.
+    +
+      right.
+      exists x.
+      assumption.
+  Qed.
 
   (** exercício 9 *)
 
   Lemma ex9 : forall x : U, P x -> exists y : U, P y.
   Proof.
-  Admitted.
+    intro x.
+    intro Hpx.
+    exists x.
+    assumption.
+  Qed.
 
   (** exercício 10 *)
 
   Lemma ex10 : (forall x : U, P x -> ~ Q x) -> ~ exists y : U, P y /\ Q y.
   Proof.
-  Admitted.
-
+    intro Hpq.
+    intro Hnpq.
+    destruct Hnpq as [y [Py Qy]].
+    apply Hpq in Py.
+    contradiction.
+  Qed.
 
   (** exercício 11 *)
 
   Lemma ex11 : (forall x : U, P x -> Q x) -> (forall x : U, ~ Q x) -> (forall x : U, ~ P x).
   Proof.
-  Admitted.
+    intro Hpq.
+    intro Hq.
+    intro x.
+    unfold not.
+    intro Px.
+    apply Hpq in Px.
+    apply Hq in Px.
+    contradiction.
+  Qed.
 
 End PredicateLogic.  

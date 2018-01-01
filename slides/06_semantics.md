@@ -332,14 +332,18 @@ Qed.
 com respeito ao sistema de tipos.
 
 ~~~~~~~~~~~~~~~
-typecheck : forall e, {t | e <<- t} + {forall t, ~ (e <<- t)}.
+typecheck : forall e, {t | e <<- t} +
+                   {forall t, ~ (e <<- t)}.
 ~~~~~~~~~~~~~~~
 
 # Definindo um type checker --- 2
 
 ~~~~~~~~~~~~~~
-refine (fix tc (e : exp) : {t | e <<- t} + {forall t, ~ (e <<- t)} :=
-    match e as e' return e = e' -> {t | e' <<- t} + {forall t, ~ (e' <<- t)} with
+refine (fix tc (e : exp) : {t | e <<- t} +
+       {forall t, ~ (e <<- t)} :=
+   match e as e'
+   return e = e' -> {t | e' <<- t} +
+	 {forall t, ~ (e' <<- t)} with
 		| T  => fun _ => [|| TBool ||]
 		| F  => fun _ => [|| TBool ||]
 		| Zero  => fun _ => [|| TNat ||]
@@ -382,4 +386,4 @@ escalabilidade de formalizações.
 
 # Conclusão --- 4
 
-![Obrigado pela atenção!](http://img09.deviantart.net/0248/i/2013/295/d/8/that_s_all_folks__by_surrimugge-d6rfav1.png)
+![Obrigado pela atenção!](./thatsallfolks.png)
