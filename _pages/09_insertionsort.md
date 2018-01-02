@@ -71,3 +71,75 @@ Outro conhecido algoritmo de ordenação é o selection sort, que consiste em, a
 colocar o menor elemento de uma lista como seu primeiro elemento. Implemente o selection sort e
 codifique a propriedade de correção para testar seu algoritmo usando QuickChick.
 
+
+# Provando a correção do insertion sort
+
+Para provarmos a correção do insertion sort, devemos especificar o que significa uma lista estar ordenada e
+ser uma permutação. Ao contrário de usarmos funções, o mais adequado para provas é especificarmos predicados
+indutivos tanto para listas ordenadas ou permutação de duas listas.
+
+Abaixo, segue o predicado para especificar quando uma lista está ordenada.
+
+```coq
+  Inductive sorted : list nat -> Prop :=
+  | SortedNil : sorted []
+  | SortedSing : forall x, sorted [ x ]
+  | SortedRec : forall x y l, x <= y -> sorted (y :: l) -> sorted (x :: y :: l).
+````
+
+### Exercício 65
+
+Prove o seguinte teorema:
+
+```coq
+  Lemma insert_sorted
+    : forall l x, sorted l -> sorted (insert x l).
+````
+
+Dizemos que uma lista xs é uma permutação de ys se permutation xs ys é provável.
+
+```coq
+  Inductive permutation {A : Type}: list A -> list A -> Prop :=
+    perm_nil : permutation [] []
+  | perm_skip : forall (x : A) (l l' : list A),
+                permutation l l' ->
+                permutation (x :: l) (x :: l')
+  | perm_swap : forall (x y : A) (l : list A),
+                permutation (y :: x :: l) (x :: y :: l)
+  | perm_trans : forall l l' l'' : list A,
+                 permutation l l' ->
+                 permutation l' l'' ->
+                 permutation l l''.
+````
+
+### Exercício 66
+
+Prove o seguinte teorema:
+
+```coq
+  Lemma insert_permutation
+    : forall l x, permutation (x :: l) (insert x l).
+```
+
+### Exercício 67
+
+Prove o seguinte teorema:
+
+```coq
+  Lemma isort_permutation_thm : forall l, permutation l (isort l).
+```
+
+Usando os resultados anteriores, prove o seguinte resultado de correção:
+
+```coq
+ Theorem isort_correct_thm : forall l, permutation l (isort l) /\
+                                   sorted (isort l).
+````
+
+Nota: Evidentemente, será necessário provar vários lemas / teoremas auxiliares. É útil
+tentar descobrir quais são os teoremas e usar QuickChick para tentar encontrar contra
+exemplos para esses possíveis teoremas, antes de tentar provar.
+
+### Exercício 68
+
+Usando como modelo a formalização do insertion sort, formalize o algoritmo selection sort.
