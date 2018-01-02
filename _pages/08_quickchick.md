@@ -224,13 +224,218 @@ Instance showTree {A} `{_ : Show A} : Show (Tree A) :=
 
 ```
 A instância para Show é definida de maneira direta e os construtores do tipo Tree possuem
-significado imediato.
+significado imediato. A função oneof permite a construção de um gerador a partir de diferentes geradores.
+
+```coq
+oneof : G ?A -> G (list ?A) -> G ?A
+```
+
+Usando o combinador oneof podemos construir um gerador para árvores binárias.
+
+```coq
+Fixpoint genTree {A} (g : G A) : G (Tree A) :=
+  oneOf [ returnGen Leaf ;
+          liftGen3 Node  g (genTree g) (genTree g) ]
+```
+
+Apesar de simples, a definição anterior possui um problema: ela não é aceita pelo
+verificador de terminação de Coq que não consegue determinar que esta função
+sempre termina. Uma maneira de contornar essa situação é uso de um parâmetro adicional para
+controlar o número de chamadas recursivas, como o código seguinte:
+
+```coq
+Fixpoint genTreeSized {A} (sz : nat) (g : G A) : G (Tree A) :=
+  match sz with
+    | O => returnGen Leaf
+    | S sz' => oneOf [ returnGen Leaf ;
+                       liftGen3  Node g (genTreeSized sz' g) (genTreeSized sz' g)
+                     ]
+  end.
+```
+
+Com isso, podemos testar o gerador de árvores aleatórias.
+
+```coq
+[ Node (3) (Leaf) (Leaf)
+, Node (0) (Leaf) (Node (1) (Leaf) (Leaf))
+, Leaf
+, Leaf
+, Leaf
+, Node (1) (Node (3) (Node (0) (Leaf) (Leaf)) (Leaf)) (Node (1) (Leaf) (Leaf))
+, Leaf
+, Leaf
+, Node (0) (Node (0) (Leaf) (Node (1) (Leaf) (Leaf))) (Leaf)
+, Leaf
+, Node (3) (Node (3) (Node (3) (Leaf) (Leaf)) (Node (2) (Leaf) (Leaf))) (Leaf)]
+````
+Note que há um elevado número de árvores vazias, o que pode não ser interessante. Idealmente,
+devemos gerar valores aleatórios que tenham uma boa variabilidade para garantir uma grande
+cobertura do código testado. O combinador frequency permite especificar o peso de geradores.
+Com isso, podemos atribuir um peso menor para folhas, gerando assim uma quantidade pequena de
+árvores vazias.
+
+```coq
+frequency : G ?A -> seq (nat * G ?A) -> G ?A
+```
+
+Abaixo apresentamos a versão aprimorada do gerador de árvores binárias aleatórias e alguns valores
+gerados.
+
+```coq
+Fixpoint genTreeSized' {A} (sz : nat) (g : G A) : G (Tree A) :=
+  match sz with
+    | O => returnGen Leaf
+    | S sz' => freq [ (1,  returnGen Leaf) ;
+                      (sz, liftGen3  Node g (genTreeSized' sz' g) (genTreeSized' sz' g))
+                    ]
+  end.
+
+Sample (genTreeSized' 3 (choose(0,3))).
+
+[ Node (0) (Node (2) (Leaf) (Leaf)) (Node (0) (Node (1) (Leaf) (Leaf)) (Node (1) (Leaf) (Leaf)))
+, Node (1) (Leaf) (Leaf), Node (1) (Node (3) (Leaf) (Leaf)) (Node (3) (Node (1) (Leaf) (Leaf)) (Leaf))
+, Node (0) (Node (3) (Leaf) (Node (1) (Leaf) (Leaf))) (Node (3) (Node (1) (Leaf) (Leaf)) (Node (3) (Leaf) (Leaf)))
+, Node (3) (Leaf) (Node (2) (Node (3) (Leaf) (Leaf)) (Node (2) (Leaf) (Leaf)))
+, Leaf
+, Node (0) (Leaf) (Node (1) (Leaf) (Node (3) (Leaf) (Leaf)))
+, Leaf
+, Node (0) (Node (0) (Leaf) (Leaf)) (Node (2) (Node (0) (Leaf) (Leaf)) (Node (2) (Leaf) (Leaf)))
+, Node (2) (Leaf) (Leaf), Leaf]
+```
+
+Como exemplo de uso deste gerador, vamos considerar a seguinte função que troca as subárvores direita e esquerda de uma
+árvore binária.
+
+```coq
+Fixpoint mirror {A : Type} (t : Tree A) : Tree A :=
+  match t with
+    | Leaf => Leaf
+    | Node x l r => Node x (mirror r) (mirror l)
+  end.
+```
+
+e de um teste de igualdade sobre árvores binárias.
+
+```coq
+Fixpoint eq_tree (t1 t2 : Tree nat) : bool :=
+  match t1, t2 with
+    | Leaf, Leaf => true
+    | Node x1 l1 r1, Node x2 l2 r2 =>
+      beq_nat x1 x2 && eq_tree l1 l2 && eq_tree r1 r2
+    | _, _ => false
+  end.
+````
+
+Evidentemente, se invertermos as subárvores esquerda e direita duas vezes, o resultado é a árvore original.
+
+```coq
+Definition mirrorP (t : Tree nat) := eq_tree (mirror (mirror t)) t.
+````
+Usamos o seguinte comando para testar essa propriedade.
+
+```coq
+QuickChick (forAll (genTreeSized' 5 (choose (0,5))) mirrorP).
+```
+
+que produz o resultado esperado, de que nenhum contra-exemplo foi encontrado.
+
+```coq
++++ Passed 10000 tests (0 discards)
+```
+
+Mas o que aconteceria se especificássemos a proopriedade incorreta? Vamos ver a seguinte definição errada de mirror:
+
+```coq
+Definition faultyMirrorP (t : Tree nat) := eq_tree (mirror t) t.
+```
+
+Ao executarmos o comando de testes
+
+```coq
+QuickChick (forAll (genTreeSized' 5 (choose (0,5))) faultyMirrorP).
+```
+
+Obtemos o seguinte contra-exemplo:
+
+```coq
+Node (2) (Node (3) (Node (4) (Leaf) (Node (0) (Leaf) (Leaf))) (Leaf))
+         (Node (5) (Node (5) (Node (3) (Node (4) (Leaf) (Leaf)) (Leaf)) (Leaf)) (Leaf))
+```
+
+Que não ajuda muito em entender o problema, visto que esse contra-exemplo parece ser desnecessiramente grande.
+Na próxima seção veremos como construir simplificadores que ajudam a reduzir o tamanho de contra-exemplos.
+
 
 ## Construindo simplificadores
 
+Intuitivamente, um simplificador é um processo guloso que busca
+encontrar o menor contra-exemplo, a partir de um maior, que falsifica
+uma certa propriedade. Simplificadores são funções de tipo A -> list A,
+que a partir de um valor x : A, produz uma lista de subtermos de x, que podem ser
+usados como candidatos de contra-exemplos menores.
 
-# Estudo de caso: Inserção em árvores binárias de busca
+Abaixo apresentamos uma definição de um simplificador de árvores binárias.
 
+```coq
+Open Scope list.
+Fixpoint shrinkTree {A} (s : A -> list A) (t : Tree A) : seq (Tree A) :=
+  match t with
+    | Leaf => []
+    | Node x l r => [l] ++ [r] ++
+                    map (fun x' => Node x' l r) (s x) ++
+                    map (fun l' => Node x l' r) (shrinkTree s l) ++
+                    map (fun r' => Node x l r') (shrinkTree s r)
+  end.
+````
+
+Note que a função gera uma lista de árvores binárias, tentando simplificar as subárvores direita e esquerda
+e concatenando os resultados desses processos.
+
+Executando o teste anterior com essa função de simplificação, conseguimos um contra-exemplo bem menor.
+
+```coq
+QuickChick (forAllShrink (genTreeSized' 5 (choose (0,5))) (shrinkTree shrink) faultyMirrorP).
+
+Node (0) (Leaf) (Node (0) (Leaf) (Leaf))
+*** Failed after 1 tests and 7 shrinks. (0 discards)
+```
+
+## Juntando todas as peças
+
+A biblioteca Haskell QuickCheck possui uma classe Arbitrary que possui duas funções
+arbitrary, que gera valores aleatórios, e shrink, que simplifica valores. QuickChick possui
+as classes GenSized e Shrink que fornecem geradores e simplificadores.
+
+```coq
+Instance genTree {A} `{Gen A} : GenSized (Tree A) :=
+  {| arbitrarySized n := genTreeSized n arbitrary |}.
+
+Instance shrTree {A} `{Shrink A} : Shrink (Tree A) :=
+  {| shrink x := shrinkTree shrink x |}.
+````
+
+Com isso podemos simplesmente chamar o comando QuickChick para realizar os testes sobre uma propriedade de
+maneira direta.
+
+```coq
+QuickChick faltyMirrorP.
+````
+
+## Gerando instâncias automaticamente
+
+QuickChick possui facilidades para geração automática de instâncias de Arbitrary e Show, usando o comando Derive.
+
+```coq
+Derive Arbitrary for Tree.
+(* genSTree is defined *)
+(* shrTree0 is defined *)
+Print genSTree.
+Print shrTree0.
+
+Derive Show for Tree.
+(* showTree0 is defined *)
+Print showTree0.
+```
 
 
 
